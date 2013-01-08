@@ -45,14 +45,18 @@ class Site(object):
         to look for included templates.
         """
 
-        from django.conf import settings
-        settings.configure(
-            TEMPLATE_DIRS=[self.paths['templates'], self.paths['pages']],
-            INSTALLED_APPS=['django.contrib.markup'],
-            STATIC_URL='/static/'
-        )
+        try:
+            from django.conf import settings
 
-        settings.INSTALLED_APPS += self.config.get('installed apps', [])
+            settings.configure(
+                TEMPLATE_DIRS=[self.paths['templates'], self.paths['pages']],
+                INSTALLED_APPS=['django.contrib.markup'],
+                STATIC_URL='/static/'
+            )
+            settings.INSTALLED_APPS += self.config.get('installed apps', [])
+        except RuntimeError:
+            # If its a runtime error this is because of a rebuild.
+            pass
 
     def verify(self):
         """
