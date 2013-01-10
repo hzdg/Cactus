@@ -21,11 +21,34 @@ from .server import Server, RequestHandler
 from .browser import browserReload, browserReloadCSS
 
 
+def setup_settings(paths, config):
+
+    try:
+        from django.conf import settings
+
+        settings.configure(
+            TEMPLATE_DIRS=[paths['templates'], paths['pages']],
+            INSTALLED_APPS=['django.contrib.markup'],
+            STATIC_URL='/static/')
+
+        settings.INSTALLED_APPS += config.get('installed apps', [])
+
+        configuration_extras = config.get('extra_settings', {})
+
+        for key, value in configuration_extras.iteritems():
+            setattr(settings, key, value)
+
+    except RuntimeError:
+        pass
+
+
 class Site(object):
 
     def __init__(self, path):
 
         self.path = path
+
+        self.two_phase = False
 
         self.paths = {
             'config': os.path.join(path, 'config.json'),
@@ -39,24 +62,16 @@ class Site(object):
 
         self.config = Config(self.paths['config'])
 
+        if 'phased' in self.config.get('installed apps', []):
+            self.two_phase = True
+
+
     def setup(self):
         """
         Configure django to use both our template and pages folder as locations
         to look for included templates.
         """
-
-        try:
-            from django.conf import settings
-
-            settings.configure(
-                TEMPLATE_DIRS=[self.paths['templates'], self.paths['pages']],
-                INSTALLED_APPS=['django.contrib.markup'],
-                STATIC_URL='/static/'
-            )
-            settings.INSTALLED_APPS += self.config.get('installed apps', [])
-        except RuntimeError:
-            # If its a runtime error this is because of a rebuild.
-            pass
+        setup_settings(self.paths, self.config)
 
     def verify(self):
         """
@@ -95,7 +110,9 @@ class Site(object):
         """
         Base context for the site: all the html pages.
         """
-        return {'CACTUS': {'pages': [p for p in self.pages() if p.path.endswith('.html')]}}
+        return {'CACTUS': {
+            'pages': [p for p in self.pages() if p.path.endswith('.html')]},
+        }
 
     def clean(self):
         """

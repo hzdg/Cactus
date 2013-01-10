@@ -8,7 +8,6 @@ from cactus.config import Config
 from django.template import Template, Context, loader  # needs to be imported
                                                        # even if not used
 
-
 class Page(object):
 
     def __init__(self, site, path):
@@ -51,7 +50,7 @@ class Page(object):
         Takes the template data with context and renders it to the final output file.
         """
 
-        data = parseValues(self.data)[1]
+        template_string = parseValues(self.data)[1]
         context = self.context
 
         # Run the prebuild plugins, we can't use the standard method here because
@@ -60,7 +59,12 @@ class Page(object):
             if hasattr(plugin, 'preBuildPage'):
                 context, data = plugin.preBuildPage(self.site, self, context, data)
 
-        return Template(data).render(context)
+        if self.site.two_phase:
+            initial_string = Template(template_string).render(context)
+            return Template(initial_string).render(context)
+
+
+        return Template(template_string).render(context)
 
     def build(self):
         """
