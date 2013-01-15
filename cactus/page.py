@@ -42,7 +42,7 @@ class Page(object):
         # Page context (parse header)
         context.update(parseValues(self.data)[0])
 
-        context.update(self.config.get('extra_context'))
+        context.update(self.config.get('extra_context', {}))
         return Context(context)
 
     def render(self):
