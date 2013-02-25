@@ -41,6 +41,11 @@ class Page(object):
 
         # Page context (parse header)
         context.update(parseValues(self.data)[0])
+        from django.conf import settings
+
+        context.update({
+            'STATIC_URL': settings.STATIC_URL,
+        })
 
         context.update(self.config.get('extra_context', {}))
         return Context(context)
