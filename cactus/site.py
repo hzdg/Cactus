@@ -29,7 +29,7 @@ def setup_settings(paths, config):
         settings.configure(
             TEMPLATE_DIRS=[paths['templates'], paths['pages']],
             INSTALLED_APPS=['django.contrib.markup'],
-            STATIC_URL='/static/')
+            STATIC_URL='./static/')
 
         settings.INSTALLED_APPS += config.get('installed apps', [])
 
